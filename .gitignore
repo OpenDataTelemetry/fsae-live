@@ -1,1 +1,2 @@
 mosquitto/var/data
+influxdb2/var/lib/*

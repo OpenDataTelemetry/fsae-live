@@ -15,16 +15,38 @@ services:
     networks:
       - open-data-telemetry-network
 
+  influxdb2:
+    container_name: influxdb2
+    restart: always
+    image: influxdb:2.7.6-alpine
+    environment:
+      DOCKER_INFLUXDB_INIT_MODEL: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ADMIN_USERNAME
+      DOCKER_INFLUXDB_INIT_PASSWORD: ADMIN_PASSWORD
+      DOCKER_INFLUXDB_INIT_ORG: ORG_NAME
+      DOCKER_INFLUXDB_INIT_BUCKET: BUCKET_NAME
+      # x2F3u2dLnMNobHudy5JmAF-rtbkQb-7tkhuWLW20veBMgkTGB6jBSGBO8Vqkjk5eIVOlWGxba7cmp66ssZlpUA==
+
+    volumes:
+    # Mount for influxdb data directory and configuration
+      - influxdb2-data:/var/lib/influxdb2
+      - influxdb2-config:/etc/influxdb2
+    ports:
+      - 8086:8086
+    networks:
+      - open-data-telemetry-network
+ 
   telegraf-mqtt-influxdb:
     container_name: telegraf-mqtt-influxdb
     restart: always
-    image: telegraf:1.29.3-alpine
+    image: telegraf:1.30.1-alpine
     depends_on:
-    - mosquitto
+      - mosquitto
+      - influxdb2
     environment:
       MQTT_BROKER: "mqtt://mosquitto:1883"
       MQTT_TOPIC: "FSAELive/IC/MauaRacing/Telemetry/rx"
-      INFLUXDB_URL: "https://us-east-1-1.aws.cloud2.influxdata.com"
+      INFLUXDB_URL: "influxdb2"
       INFLUXDB_TOKEN: "v7MfdjGgeFH6yKQvOkW_LgLHsP2XlhLuVul6EcxlZAbx0vwCwcVc6kH-tVBmNv_v1y-PGkQjoeX7QtUjRHBGZA=="
       INFLUXDB_ORGANIZATION: "FSAELive"
       INFLUXDB_BUCKET: "MauaRacing"
@@ -32,10 +54,15 @@ services:
       - ./telegraf-mqtt-influxdb/telegraf.conf:/etc/telegraf/telegraf.conf:ro
     networks:
       - open-data-telemetry-network
- 
+
+
 networks:
   open-data-telemetry-network:
     driver: bridge
+
+volumes:
+  influxdb2-data:
+  influxdb2-config:
 
 
 
